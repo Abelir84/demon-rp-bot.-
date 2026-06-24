@@ -9,18 +9,22 @@ intents.message_content = True
 
 บอท = commands.Bot(command_prefix="!", intents=intents)
 
-@บอท.event
-async def on_ready():
-    print("✅ บอทออนไลน์แล้ว")
-  @บอท.command()
-async def สมัคร(ctx):
+# ===== ระบบไฟล์ =====
+ไฟล์ = "ข้อมูล.json"
 
-    data = โหลด()
-    ผู้เล่น(data, str(ctx.author.id))
-    บันทึก(data)
+if not os.path.exists(ไฟล์):
+    with open(ไฟล์, "w", encoding="utf-8") as f:
+        json.dump({}, f, ensure_ascii=False)
 
-    await ctx.send("✨ สมัครเป็นเผ่ามารสำเร็จ!")
-  def ผู้เล่น(data, id):
+def โหลด():
+    with open(ไฟล์, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def บันทึก(data):
+    with open(ไฟล์, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+def ผู้เล่น(data, id):
     if id not in data:
         data[id] = {
             "แต้ม": 0,
@@ -28,9 +32,54 @@ async def สมัคร(ctx):
             "ขั้นมาร": "👹 เผ่ามารทั่วไป",
             "สายมาร": None
         }
-      @บอท.command()
-async def สถานะ(ctx):
+    return data[id]
 
+# ===== ระบบขั้นมาร =====
+import random
+
+def อัปขั้นมาร(user):
+
+    lv = user["เลเวล"]
+
+    if lv >= 5000:
+        return "👑 จักรพรรดิมาร"
+
+    elif lv >= 3000:
+        return random.choice([
+            "🌙 มารจันทรา",
+            "⭐ มารดวงดาว",
+            "🩸 มารโลหิต",
+            "☠️ มารแห่งความตาย",
+            "🐍 มารอสรพิษ",
+            "💀 มารกระดูก",
+            "🌑 มารรัตติกาล",
+            "🦋 มารมายา",
+            "⚡ มารอัสนี",
+            "❄️ มารเหมันต์",
+            "🔥 มารเพลิง",
+            "🌪️ มารวายุ",
+            "⛓️ มารพันธนาการ",
+            "👻 มารเงาวิญญาณ"
+        ])
+
+    elif lv >= 300:
+        return "⚔️ แม่ทัพมาร"
+
+    elif lv >= 100:
+        return "🛡️ ขุนพลมาร"
+
+    return "👹 เผ่ามารทั่วไป"
+# ===== ระบบสมัคร =====
+@บอท.command()
+async def สมัคร(ctx):
+    data = โหลด()
+    ผู้เล่น(data, str(ctx.author.id))
+    บันทึก(data)
+    await ctx.send("✨ สมัครเผ่ามารสำเร็จ!")
+
+# ===== สถานะ =====
+@บอท.command()
+async def สถานะ(ctx):
     data = โหลด()
     u = ผู้เล่น(data, str(ctx.author.id))
 
@@ -43,10 +92,11 @@ async def สถานะ(ctx):
 🏅 ขั้นมาร: {u['ขั้นมาร']}
 👑 สายมาร: {u['สายมาร']}
 """
-    )​
+    )
+
+# ===== ล่ามอน =====
 @บอท.command()
 async def ล่ามอน(ctx):
-
     data = โหลด()
     u = ผู้เล่น(data, str(ctx.author.id))
 
@@ -59,9 +109,10 @@ async def ล่ามอน(ctx):
     บันทึก(data)
 
     await ctx.send(f"⚔️ ล่ามอนได้ +{ได้} แต้ม")
+
+# ===== ดันเจี้ยน =====
 @บอท.command()
 async def ดันเจี้ยน(ctx):
-
     data = โหลด()
     u = ผู้เล่น(data, str(ctx.author.id))
 
@@ -77,17 +128,25 @@ async def ดันเจี้ยน(ctx):
     บันทึก(data)
 
     await ctx.send(f"🏰 เคลียร์ดันเจี้ยน +{total} แต้ม")
+
+# ===== เลือกสายมาร =====
 @บอท.command()
 async def เลือกสายมาร(ctx, *, name):
-
     data = โหลด()
     u = ผู้เล่น(data, str(ctx.author.id))
 
-    if u["สายมาร"]:
-        await ctx.send("❌ เลือกแล้วเปลี่ยนไม่ได้")
+    if u["สายมาร"] is not None:
+        await ctx.send("❌ คุณเลือกแล้ว เปลี่ยนไม่ได้")
         return
 
     u["สายมาร"] = name
     บันทึก(data)
 
     await ctx.send(f"👑 เลือกสายมาร: {name}")
+
+# ===== เปิดบอท =====
+@บอท.event
+async def on_ready():
+    print("บอทออนไลน์แล้ว")
+
+บอท.run(os.getenv("MTUxOTE2MTY1NTcyMjkwMTYxNg.GwT4pv.ja5zTKyQsqsh4pqnbYgVOJASCCJngcqjZBaIGo"))
