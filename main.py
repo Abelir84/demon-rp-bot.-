@@ -11,27 +11,28 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 FILE = "data.json"
 
+# ===== สร้างไฟล์ถ้ายังไม่มี =====
 if not os.path.exists(FILE):
     with open(FILE, "w", encoding="utf-8") as f:
         json.dump({}, f)
 
-def load_data():
+def load():
     with open(FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def save_data(data):
+def save(data):
     with open(FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-def get_user(data, user_id):
-    if user_id not in data:
-        data[user_id] = {
+def get_user(data, uid):
+    if uid not in data:
+        data[uid] = {
             "exp": 0,
             "level": 1,
             "rank": "👹 เผ่ามารทั่วไป",
             "path": None
         }
-    return data[user_id]
+    return data[uid]
 
 def rank_up(user):
     lv = user["level"]
@@ -39,7 +40,7 @@ def rank_up(user):
     if lv >= 5000:
         return "👑 จักรพรรดิมาร"
 
-    elif lv >= 3000:
+    if lv >= 3000:
         return random.choice([
             "🌙 มารจันทรา",
             "⭐ มารดวงดาว",
@@ -57,37 +58,41 @@ def rank_up(user):
             "👻 มารเงาวิญญาณ"
         ])
 
-    elif lv >= 300:
+    if lv >= 300:
         return "⚔️ แม่ทัพมาร"
 
-    elif lv >= 100:
+    if lv >= 100:
         return "🛡️ ขุนพลมาร"
 
     return "👹 เผ่ามารทั่วไป"
 
-@bot.command()
-async def register(ctx):
-    data = load_data()
-    get_user(data, str(ctx.author.id))
-    save_data(data)
-    await ctx.send("✨ สมัครเผ่ามารแล้ว")
+@bot.event
+async def on_ready():
+    print("Bot is online")
 
 @bot.command()
-async def status(ctx):
-    data = load_data()
+async def สมัคร(ctx):
+    data = load()
+    get_user(data, str(ctx.author.id))
+    save(data)
+    await ctx.send("✨ สมัครแล้ว")
+
+@bot.command()
+async def สถานะ(ctx):
+    data = load()
     u = get_user(data, str(ctx.author.id))
 
-    await ctx.send(f"""
-📜 สถานะ
-✨ EXP: {u['exp']}
-⭐ Level: {u['level']}
-🏅 Rank: {u['rank']}
-👑 Path: {u['path']}
-""")
+    await ctx.send(
+        f"📜 สถานะ\n"
+        f"EXP: {u['exp']}\n"
+        f"LV: {u['level']}\n"
+        f"Rank: {u['rank']}\n"
+        f"Path: {u['path']}"
+    )
 
 @bot.command()
-async def hunt(ctx):
-    data = load_data()
+async def ล่ามอน(ctx):
+    data = load()
     u = get_user(data, str(ctx.author.id))
 
     gain = random.randint(20, 80)
@@ -96,30 +101,28 @@ async def hunt(ctx):
     u["level"] = (u["exp"] // 100) + 1
     u["rank"] = rank_up(u)
 
-    save_data(data)
+    save(data)
 
-    await ctx.send(f"⚔️ ล่ามอนได้ +{gain} EXP")
+    await ctx.send(f"⚔️ +{gain} EXP")
 
 @bot.command()
-async def dungeon(ctx):
-    data = load_data()
+async def ดันเจี้ยน(ctx):
+    data = load()
     u = get_user(data, str(ctx.author.id))
 
-    total = 0
-    for _ in range(3):
-        total += random.randint(100, 300)
+    total = sum(random.randint(100, 300) for _ in range(3))
 
     u["exp"] += total
     u["level"] = (u["exp"] // 100) + 1
     u["rank"] = rank_up(u)
 
-    save_data(data)
+    save(data)
 
-    await ctx.send(f"🏰 ดันเจี้ยนสำเร็จ +{total} EXP")
+    await ctx.send(f"🏰 +{total} EXP")
 
 @bot.command()
-async def path(ctx, *, name):
-    data = load_data()
+async def เลือกสาย(ctx, *, name):
+    data = load()
     u = get_user(data, str(ctx.author.id))
 
     if u["path"] is not None:
@@ -127,12 +130,8 @@ async def path(ctx, *, name):
         return
 
     u["path"] = name
-    save_data(data)
+    save(data)
 
     await ctx.send(f"👑 เลือกสาย: {name}")
-
-@bot.event
-async def on_ready():
-    print("Bot is online")
 
 bot.run(os.getenv("MTUxOTE2MTY1NTcyMjkwMTYxNg.GwT4pv.ja5zTKyQsqsh4pqnbYgVOJASCCJngcqjZBaIGo"))
