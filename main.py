@@ -134,4 +134,4 @@ async def เลือกสาย(ctx, *, name):
 
     await ctx.send(f"👑 เลือกสาย: {name}")
 
-bot.run(os.getenv("MTUxOTE2MTY1NTcyMjkwMTYxNg.GwT4pv.ja5zTKyQsqsh4pqnbYgVOJASCCJngcqjZBaIGo"))
+bot.run(os.getenv("TOKEN"))
