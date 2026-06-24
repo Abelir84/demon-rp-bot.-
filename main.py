@@ -9,7 +9,6 @@ intents.message_content = True
 
 บอท = commands.Bot(command_prefix="!", intents=intents)
 
-# ===== ระบบไฟล์ =====
 ไฟล์ = "ข้อมูล.json"
 
 if not os.path.exists(ไฟล์):
@@ -34,11 +33,7 @@ def ผู้เล่น(data, id):
         }
     return data[id]
 
-# ===== ระบบขั้นมาร =====
-import random
-
 def อัปขั้นมาร(user):
-
     lv = user["เลเวล"]
 
     if lv >= 5000:
@@ -69,13 +64,14 @@ def อัปขั้นมาร(user):
         return "🛡️ ขุนพลมาร"
 
     return "👹 เผ่ามารทั่วไป"
-# ===== ระบบสมัคร =====
+
+# ===== สมัคร =====
 @บอท.command()
 async def สมัคร(ctx):
     data = โหลด()
     ผู้เล่น(data, str(ctx.author.id))
     บันทึก(data)
-    await ctx.send("✨ สมัครเผ่ามารสำเร็จ!")
+    await ctx.send("✨ สมัครแล้ว")
 
 # ===== สถานะ =====
 @บอท.command()
@@ -83,16 +79,13 @@ async def สถานะ(ctx):
     data = โหลด()
     u = ผู้เล่น(data, str(ctx.author.id))
 
-    await ctx.send(
-        f"""
+    await ctx.send(f"""
 📜 สถานะ
-
 ✨ แต้ม: {u['แต้ม']}
 ⭐ เลเวล: {u['เลเวล']}
 🏅 ขั้นมาร: {u['ขั้นมาร']}
 👑 สายมาร: {u['สายมาร']}
-"""
-    )
+""")
 
 # ===== ล่ามอน =====
 @บอท.command()
@@ -104,11 +97,11 @@ async def ล่ามอน(ctx):
 
     u["แต้ม"] += ได้
     u["เลเวล"] = (u["แต้ม"] // 100) + 1
-    u["ขั้นมาร"] = "👹 เผ่ามารทั่วไป"
+    u["ขั้นมาร"] = อัปขั้นมาร(u)
 
     บันทึก(data)
 
-    await ctx.send(f"⚔️ ล่ามอนได้ +{ได้} แต้ม")
+    await ctx.send(f"⚔️ ได้ +{ได้} แต้ม")
 
 # ===== ดันเจี้ยน =====
 @บอท.command()
@@ -119,15 +112,15 @@ async def ดันเจี้ยน(ctx):
     total = 0
 
     for i in range(3):
-        ได้ = random.randint(100, 300)
-        total += ได้
+        total += random.randint(100, 300)
 
     u["แต้ม"] += total
     u["เลเวล"] = (u["แต้ม"] // 100) + 1
+    u["ขั้นมาร"] = อัปขั้นมาร(u)
 
     บันทึก(data)
 
-    await ctx.send(f"🏰 เคลียร์ดันเจี้ยน +{total} แต้ม")
+    await ctx.send(f"🏰 +{total} แต้ม")
 
 # ===== เลือกสายมาร =====
 @บอท.command()
@@ -135,16 +128,16 @@ async def เลือกสายมาร(ctx, *, name):
     data = โหลด()
     u = ผู้เล่น(data, str(ctx.author.id))
 
-    if u["สายมาร"] is not None:
-        await ctx.send("❌ คุณเลือกแล้ว เปลี่ยนไม่ได้")
+    if u["สายมาร"]:
+        await ctx.send("❌ เลือกแล้วเปลี่ยนไม่ได้")
         return
 
     u["สายมาร"] = name
     บันทึก(data)
 
-    await ctx.send(f"👑 เลือกสายมาร: {name}")
+    await ctx.send(f"👑 เลือก: {name}")
 
-# ===== เปิดบอท =====
+# ===== bot run =====
 @บอท.event
 async def on_ready():
     print("บอทออนไลน์แล้ว")
