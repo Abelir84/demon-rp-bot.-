@@ -7,34 +7,34 @@ import random
 intents = discord.Intents.default()
 intents.message_content = True
 
-บอท = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
-ไฟล์ = "ข้อมูล.json"
+FILE = "data.json"
 
-if not os.path.exists(ไฟล์):
-    with open(ไฟล์, "w", encoding="utf-8") as f:
-        json.dump({}, f, ensure_ascii=False)
+if not os.path.exists(FILE):
+    with open(FILE, "w", encoding="utf-8") as f:
+        json.dump({}, f)
 
-def โหลด():
-    with open(ไฟล์, "r", encoding="utf-8") as f:
+def load_data():
+    with open(FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def บันทึก(data):
-    with open(ไฟล์, "w", encoding="utf-8") as f:
+def save_data(data):
+    with open(FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-def ผู้เล่น(data, id):
-    if id not in data:
-        data[id] = {
-            "แต้ม": 0,
-            "เลเวล": 1,
-            "ขั้นมาร": "👹 เผ่ามารทั่วไป",
-            "สายมาร": None
+def get_user(data, user_id):
+    if user_id not in data:
+        data[user_id] = {
+            "exp": 0,
+            "level": 1,
+            "rank": "👹 เผ่ามารทั่วไป",
+            "path": None
         }
-    return data[id]
+    return data[user_id]
 
-def อัปขั้นมาร(user):
-    lv = user["เลเวล"]
+def rank_up(user):
+    lv = user["level"]
 
     if lv >= 5000:
         return "👑 จักรพรรดิมาร"
@@ -65,81 +65,74 @@ def อัปขั้นมาร(user):
 
     return "👹 เผ่ามารทั่วไป"
 
-# ===== สมัคร =====
-@บอท.command()
-async def สมัคร(ctx):
-    data = โหลด()
-    ผู้เล่น(data, str(ctx.author.id))
-    บันทึก(data)
-    await ctx.send("✨ สมัครแล้ว")
+@bot.command()
+async def register(ctx):
+    data = load_data()
+    get_user(data, str(ctx.author.id))
+    save_data(data)
+    await ctx.send("✨ สมัครเผ่ามารแล้ว")
 
-# ===== สถานะ =====
-@บอท.command()
-async def สถานะ(ctx):
-    data = โหลด()
-    u = ผู้เล่น(data, str(ctx.author.id))
+@bot.command()
+async def status(ctx):
+    data = load_data()
+    u = get_user(data, str(ctx.author.id))
 
     await ctx.send(f"""
 📜 สถานะ
-✨ แต้ม: {u['แต้ม']}
-⭐ เลเวล: {u['เลเวล']}
-🏅 ขั้นมาร: {u['ขั้นมาร']}
-👑 สายมาร: {u['สายมาร']}
+✨ EXP: {u['exp']}
+⭐ Level: {u['level']}
+🏅 Rank: {u['rank']}
+👑 Path: {u['path']}
 """)
 
-# ===== ล่ามอน =====
-@บอท.command()
-async def ล่ามอน(ctx):
-    data = โหลด()
-    u = ผู้เล่น(data, str(ctx.author.id))
+@bot.command()
+async def hunt(ctx):
+    data = load_data()
+    u = get_user(data, str(ctx.author.id))
 
-    ได้ = random.randint(20, 80)
+    gain = random.randint(20, 80)
 
-    u["แต้ม"] += ได้
-    u["เลเวล"] = (u["แต้ม"] // 100) + 1
-    u["ขั้นมาร"] = อัปขั้นมาร(u)
+    u["exp"] += gain
+    u["level"] = (u["exp"] // 100) + 1
+    u["rank"] = rank_up(u)
 
-    บันทึก(data)
+    save_data(data)
 
-    await ctx.send(f"⚔️ ได้ +{ได้} แต้ม")
+    await ctx.send(f"⚔️ ล่ามอนได้ +{gain} EXP")
 
-# ===== ดันเจี้ยน =====
-@บอท.command()
-async def ดันเจี้ยน(ctx):
-    data = โหลด()
-    u = ผู้เล่น(data, str(ctx.author.id))
+@bot.command()
+async def dungeon(ctx):
+    data = load_data()
+    u = get_user(data, str(ctx.author.id))
 
     total = 0
-
-    for i in range(3):
+    for _ in range(3):
         total += random.randint(100, 300)
 
-    u["แต้ม"] += total
-    u["เลเวล"] = (u["แต้ม"] // 100) + 1
-    u["ขั้นมาร"] = อัปขั้นมาร(u)
+    u["exp"] += total
+    u["level"] = (u["exp"] // 100) + 1
+    u["rank"] = rank_up(u)
 
-    บันทึก(data)
+    save_data(data)
 
-    await ctx.send(f"🏰 +{total} แต้ม")
+    await ctx.send(f"🏰 ดันเจี้ยนสำเร็จ +{total} EXP")
 
-# ===== เลือกสายมาร =====
-@บอท.command()
-async def เลือกสายมาร(ctx, *, name):
-    data = โหลด()
-    u = ผู้เล่น(data, str(ctx.author.id))
+@bot.command()
+async def path(ctx, *, name):
+    data = load_data()
+    u = get_user(data, str(ctx.author.id))
 
-    if u["สายมาร"]:
+    if u["path"] is not None:
         await ctx.send("❌ เลือกแล้วเปลี่ยนไม่ได้")
         return
 
-    u["สายมาร"] = name
-    บันทึก(data)
+    u["path"] = name
+    save_data(data)
 
-    await ctx.send(f"👑 เลือก: {name}")
+    await ctx.send(f"👑 เลือกสาย: {name}")
 
-# ===== bot run =====
-@บอท.event
+@bot.event
 async def on_ready():
-    print("บอทออนไลน์แล้ว")
+    print("Bot is online")
 
-บอท.run(os.getenv("MTUxOTE2MTY1NTcyMjkwMTYxNg.GwT4pv.ja5zTKyQsqsh4pqnbYgVOJASCCJngcqjZBaIGo"))
+bot.run(os.getenv("MTUxOTE2MTY1NTcyMjkwMTYxNg.GwT4pv.ja5zTKyQsqsh4pqnbYgVOJASCCJngcqjZBaIGo"))
